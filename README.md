@@ -40,8 +40,3 @@ camera-lstm/
 - **Landmarks**: 33 pose keypoints × (x, y, z, visibility) = 132 dimensions per frame.
 - **LSTM**: `(batch, seq_len, 132)` → logits over `num_classes` (e.g. action labels). Train with your own data and loss (e.g. cross-entropy).
 
-## Next steps
-
-1. Replace dummy labels with real action/gesture labels and train the LSTM (e.g. on saved landmark sequences).
-2. Tune `SEQ_LEN` and LSTM `hidden_size` / `num_layers`.
-3. Optionally use MediaPipe Hands or Holistic for hands + pose.
