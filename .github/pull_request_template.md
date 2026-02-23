@@ -19,7 +19,7 @@ Explain the motivation or problem being solved.
 - [ ] No shape mismatches
 - [ ] No new warnings
 
-Describe any manual testing done.
+
 
 ---
 
