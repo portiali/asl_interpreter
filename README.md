@@ -5,7 +5,7 @@ Starter project: live webcam frames, MediaPipe Pose landmarks, and a PyTorch LST
 ## Setup
 
 ```bash
-cd camera-lstm
+cd asl_interpreter
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
