@@ -20,7 +20,7 @@ From the project root (`camera-lstm/`):
 ```bash
 python main.py
 ```
-
+**ideally lololol but probs not teehee**
 - A window shows the camera feed with pose landmarks drawn.
 - Once 16 frames of landmarks are buffered, the LSTM runs (untrained; class index is just a placeholder).
 - Press **q** to quit.
@@ -39,7 +39,5 @@ camera-lstm/
     └── model.py         # LandmarkLSTM(seq_len, 132) → num_classes
 ```
 
-- **Landmarks**: 33 pose keypoints × (x, y, z, visibility) = 132 dimensions per frame.
-- **LSTM**: `(batch, seq_len, 132)` → logits over `num_classes` (e.g. action labels). Train with your own data and loss (e.g. cross-entropy).
 
 
