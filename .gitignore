@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+.env/
+.venv/
+
+# OS
+.DS_Store
+
+# ML artifacts
+checkpoints/
+models/
+*.pt
+*.pth
+*.ckpt
+
+# Logs
+logs/
+wandb/
