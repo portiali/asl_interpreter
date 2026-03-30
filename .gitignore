@@ -10,12 +10,12 @@ venv/
 # OS
 .DS_Store
 
+# Training data
+data/
+*.npy
+
 # ML artifacts
-checkpoints/
 models/
-*.pt
-*.pth
-*.ckpt
 
 # Logs
 logs/

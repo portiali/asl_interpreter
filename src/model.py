@@ -1,9 +1,20 @@
 """
-Simple LSTM that takes sequences of MediaPipe landmark vectors (132-d per frame).
+Simple LSTM that takes sequences of MediaPipe landmark vectors.
+
+Supports both pose landmarks (132-d) and hand landmarks (126-d).
 """
+
 import torch
 import torch.nn as nn
-from src.landmarks import LANDMARK_VEC_SIZE
+from src.landmarks import HOLISTIC_VEC_SIZE
+
+CLASS_LABELS = {
+    0: "hello",
+    1: "thank_you",
+    2: "yes",
+    3: "no",
+    4: "i_love_you",
+}
 
 
 class LandmarkLSTM(nn.Module):
@@ -15,7 +26,7 @@ class LandmarkLSTM(nn.Module):
 
     def __init__(
         self,
-        input_size: int = LANDMARK_VEC_SIZE,
+        input_size: int = HOLISTIC_VEC_SIZE,
         hidden_size: int = 128,
         num_layers: int = 2,
         num_classes: int = 5,
@@ -55,6 +66,6 @@ class LandmarkLSTM(nn.Module):
         return self.fc(last)
 
 
-def build_dummy_sequence(batch: int = 2, seq_len: int = 16) -> torch.Tensor:
-    """Create a dummy (batch, seq_len, 132) tensor for testing."""
-    return torch.randn(batch, seq_len, LANDMARK_VEC_SIZE)
+def build_dummy_sequence(batch: int = 2, seq_len: int = 30) -> torch.Tensor:
+    """Create a dummy (batch, seq_len, 126) tensor for testing."""
+    return torch.randn(batch, seq_len, HOLISTIC_VEC_SIZE)
