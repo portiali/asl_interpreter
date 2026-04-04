@@ -1,6 +1,7 @@
 """
 Live frame capture from the default camera using OpenCV.
 """
+
 import cv2
 from typing import Generator, Optional
 
