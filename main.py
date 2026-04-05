@@ -21,7 +21,7 @@ import torch
 from src.capture import get_frames
 from src.display import draw_overlay
 from src.landmarks import HolisticLandmarkExtractor, HOLISTIC_VEC_SIZE
-from src.model import LandmarkLSTM, CLASS_LABELS
+from src.model import LandmarkTransformer, CLASS_LABELS
 from src.smoothing import PredictionSmoother
 
 # Sequence length matching training data (~1s at 30fps)
@@ -37,12 +37,10 @@ def main() -> None:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = LandmarkLSTM(
-        input_size=HOLISTIC_VEC_SIZE,
-        hidden_size=128,
-        num_layers=2,
+    model = LandmarkTransformer(
         num_classes=len(CLASS_LABELS),
-        dropout=0.2,
+        input_size=HOLISTIC_VEC_SIZE,
+        seq_len=SEQ_LEN,
     ).to(device)
     model.load_state_dict(
         torch.load(CHECKPOINT_PATH, map_location=device, weights_only=True)
