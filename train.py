@@ -1,5 +1,5 @@
 """
-Train the LandmarkLSTM on collected holistic landmark sequences.
+Train the LandmarkTransformer on collected holistic landmark sequences.
 
 Usage:
     python train.py --data_dir data/ --epochs 100 --batch_size 16
