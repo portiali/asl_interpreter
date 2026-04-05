@@ -20,3 +20,6 @@ models/
 # Logs
 logs/
 wandb/
+
+# Claude Code
+.claude/
