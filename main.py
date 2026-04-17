@@ -1,19 +1,8 @@
-"""
-Live ASL interpreter — camera -> holistic landmarks -> LSTM -> smoothed predictions.
-
-Run: python main.py
-
-- Frames are read from the default camera.
-- MediaPipe Holistic extracts hand + upper-body landmarks (147-d vector).
-- Landmarks are buffered into a sliding window and fed to the LSTM.
-- Temporal smoothing stabilizes predictions.
-- Press 'q' to quit.
-"""
-
 import collections
 import os
 import sys
 import time
+import threading
 
 import cv2
 import torch
@@ -21,12 +10,13 @@ import torch
 from src.capture import get_frames
 from src.display import draw_overlay
 from src.landmarks import HolisticLandmarkExtractor, HOLISTIC_VEC_SIZE
+from src.llm import words_to_sentence
 from src.model import LandmarkTransformer, CLASS_LABELS
 from src.smoothing import PredictionSmoother
 
-# Sequence length matching training data (~1s at 30fps)
 SEQ_LEN = 30
 CHECKPOINT_PATH = os.path.join("checkpoints", "best_model.pt")
+SENTENCE_TIMEOUT = 5.0  # seconds of no new words before sentence resets
 
 
 def main() -> None:
@@ -48,12 +38,21 @@ def main() -> None:
     model.eval()
 
     smoother = PredictionSmoother(num_classes=len(CLASS_LABELS))
-
-    # Sliding window of landmark vectors
     landmark_buffer: collections.deque = collections.deque(maxlen=SEQ_LEN)
+
+    word_buffer: list[str] = []
+    last_added_word: str = ""
+    current_sentence: str = ""
+    last_word_time: float = time.time()
+    llm_running: bool = False
 
     prev_time = time.time()
     fps = 0.0
+
+    def update_sentence(words: list[str]) -> None:
+        nonlocal current_sentence, llm_running
+        current_sentence = words_to_sentence(words)
+        llm_running = False
 
     with HolisticLandmarkExtractor() as extractor:
         for ok, frame in get_frames(camera_id=0, width=640, height=480):
@@ -65,13 +64,11 @@ def main() -> None:
             if vec is not None:
                 landmark_buffer.append(vec)
 
-            # Track FPS
             now = time.time()
             dt = now - prev_time
             fps = 1.0 / dt if dt > 0 else 0.0
             prev_time = now
 
-            # Run inference when buffer is full
             sign_name = ""
             confidence = 0.0
             is_confident = False
@@ -87,11 +84,33 @@ def main() -> None:
                 pred, confidence, is_confident = smoother.update(logits.squeeze(0))
                 sign_name = CLASS_LABELS.get(pred, "unknown")
 
-            drawn = draw_overlay(drawn, sign_name, confidence, is_confident, fps)
+                if is_confident and sign_name and sign_name != last_added_word:
+                    word_buffer.append(sign_name)
+                    last_added_word = sign_name
+                    last_word_time = now
+                    if not llm_running:
+                        llm_running = True
+                        t = threading.Thread(
+                            target=update_sentence, args=(word_buffer.copy(),), daemon=True
+                        )
+                        t.start()
+
+            # Reset sentence after timeout with no new words
+            if word_buffer and (now - last_word_time) > SENTENCE_TIMEOUT:
+                word_buffer.clear()
+                last_added_word = ""
+                current_sentence = ""
+
+            drawn = draw_overlay(drawn, sign_name, confidence, is_confident, fps, current_sentence)
 
             cv2.imshow("ASL Interpreter", drawn)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
                 break
+            elif key == ord("r"):
+                word_buffer.clear()
+                last_added_word = ""
+                current_sentence = ""
 
     cv2.destroyAllWindows()
 
