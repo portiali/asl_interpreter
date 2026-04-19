@@ -6,6 +6,7 @@ from openai import OpenAI
 
 client = OpenAI()  # reads OPENAI_API_KEY from environment
 
+
 def words_to_sentence(words: list[str]) -> str:
     """Send a word list to GPT and return a natural sentence.
 

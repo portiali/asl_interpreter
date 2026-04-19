@@ -91,7 +91,9 @@ def main() -> None:
                     if not llm_running:
                         llm_running = True
                         t = threading.Thread(
-                            target=update_sentence, args=(word_buffer.copy(),), daemon=True
+                            target=update_sentence,
+                            args=(word_buffer.copy(),),
+                            daemon=True,
                         )
                         t.start()
 
@@ -101,7 +103,9 @@ def main() -> None:
                 last_added_word = ""
                 current_sentence = ""
 
-            drawn = draw_overlay(drawn, sign_name, confidence, is_confident, fps, current_sentence)
+            drawn = draw_overlay(
+                drawn, sign_name, confidence, is_confident, fps, current_sentence
+            )
 
             cv2.imshow("ASL Interpreter", drawn)
             key = cv2.waitKey(1) & 0xFF
