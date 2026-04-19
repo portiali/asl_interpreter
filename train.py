@@ -1,5 +1,5 @@
 """
-Train the LandmarkLSTM on collected holistic landmark sequences.
+Train the LandmarkTransformer on collected holistic landmark sequences.
 
 Usage:
     python train.py --data_dir data/ --epochs 100 --batch_size 16
@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 
 from src.landmarks import HOLISTIC_VEC_SIZE
-from src.model import LandmarkLSTM, CLASS_LABELS
+from src.model import LandmarkTransformer, CLASS_LABELS
 
 
 class SignLanguageDataset(Dataset):
@@ -206,12 +206,10 @@ def main() -> None:
     val_loader = DataLoader(val_ds, batch_size=args.batch_size)
 
     # Model
-    model = LandmarkLSTM(
-        input_size=HOLISTIC_VEC_SIZE,
-        hidden_size=128,
-        num_layers=2,
+    model = LandmarkTransformer(
         num_classes=len(CLASS_LABELS),
-        dropout=0.2,
+        input_size=HOLISTIC_VEC_SIZE,
+        seq_len=args.seq_len,
     ).to(device)
 
     criterion = nn.CrossEntropyLoss()
