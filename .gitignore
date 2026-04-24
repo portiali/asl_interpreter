@@ -12,6 +12,7 @@ venv/
 
 # Training data
 data/
+dataset/
 *.npy
 
 # ML artifacts
