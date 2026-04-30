@@ -6,6 +6,7 @@ Usage:
 """
 
 import argparse
+import json
 import os
 import random
 
@@ -17,7 +18,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 
 from src.landmarks import HOLISTIC_VEC_SIZE
-from src.model import LandmarkTransformer, CLASS_LABELS
+from src.model import LandmarkTransformer
 
 
 class SignLanguageDataset(Dataset):
@@ -84,10 +85,19 @@ class SignLanguageDataset(Dataset):
         return seq
 
 
+def discover_labels(data_dir: str) -> dict[str, int]:
+    """Build a label_map from subdirectories of data_dir, sorted alphabetically."""
+    words = sorted(
+        d for d in os.listdir(data_dir)
+        if os.path.isdir(os.path.join(data_dir, d)) and not d.startswith("_")
+    )
+    return {word: idx for idx, word in enumerate(words)}
+
+
 def load_data(
     data_dir: str, label_map: dict[str, int]
 ) -> tuple[list[np.ndarray], list[int]]:
-    """Walk data directory and load all .npy sequences with their labels."""
+    """Walk data directory and load all .npz sequences with their labels."""
     sequences = []
     labels = []
 
@@ -97,13 +107,13 @@ def load_data(
             print(f"  Warning: no directory for '{label_name}', skipping")
             continue
 
-        npy_files = [f for f in os.listdir(label_dir) if f.endswith(".npy")]
-        for f in npy_files:
-            seq = np.load(os.path.join(label_dir, f))
+        npz_files = [f for f in os.listdir(label_dir) if f.endswith(".npz")]
+        for f in npz_files:
+            seq = np.load(os.path.join(label_dir, f))["landmarks"]
             sequences.append(seq)
             labels.append(label_idx)
 
-        print(f"  Loaded {len(npy_files)} sequences for '{label_name}'")
+        print(f"  Loaded {len(npz_files)} sequences for '{label_name}'")
 
     return sequences, labels
 
@@ -177,14 +187,15 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
-    # Build label map from CLASS_LABELS
-    label_map = {name: idx for idx, name in CLASS_LABELS.items()}
+    label_map = discover_labels(args.data_dir)
+    class_labels = {idx: name for name, idx in label_map.items()}
+    print(f"Discovered {len(label_map)} classes from {args.data_dir}/")
 
     print(f"\nLoading data from {args.data_dir}/")
     sequences, labels = load_data(args.data_dir, label_map)
 
     if len(sequences) == 0:
-        print("No data found! Run collect_data.py first.")
+        print("No data found! Run datapipeline.py first.")
         return
 
     num_classes = len(set(labels))
@@ -207,7 +218,7 @@ def main() -> None:
 
     # Model
     model = LandmarkTransformer(
-        num_classes=len(CLASS_LABELS),
+        num_classes=len(label_map),
         input_size=HOLISTIC_VEC_SIZE,
         seq_len=args.seq_len,
     ).to(device)
@@ -218,6 +229,8 @@ def main() -> None:
     # Training loop with early stopping
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     checkpoint_path = os.path.join(args.checkpoint_dir, "best_model.pt")
+    with open(os.path.join(args.checkpoint_dir, "label_map.json"), "w") as f:
+        json.dump(label_map, f, indent=2)
 
     best_val_loss = float("inf")
     patience_counter = 0
@@ -264,7 +277,7 @@ def main() -> None:
             all_targets.extend(targets.numpy())
 
     present = sorted(set(all_targets))
-    present_names = [CLASS_LABELS[i] for i in present]
+    present_names = [class_labels[i] for i in present]
 
     print("\nConfusion Matrix:")
     print(confusion_matrix(all_targets, all_preds, labels=present))

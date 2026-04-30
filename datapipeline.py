@@ -49,7 +49,6 @@ def extract_landmarks(video_path: Path, extractor: HolisticLandmarkExtractor):
         return None
     return np.stack(vectors)
 
-
 with HolisticLandmarkExtractor() as extractor:
     for row in df.itertuples(index=False):
         word = row.word
