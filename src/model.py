@@ -43,7 +43,7 @@ class LandmarkTransformer(nn.Module):
 
         self.pos_embed = nn.Embedding(seq_len, d_model)
 
-        self.layer = nn.TransformerEncoderLayer(
+        encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
@@ -53,7 +53,7 @@ class LandmarkTransformer(nn.Module):
         )
 
         self.transformer = nn.TransformerEncoder(
-            encoder_layer=self.layer, num_layers=num_layers
+            encoder_layer=encoder_layer, num_layers=num_layers
         )
 
         self.fc = nn.Sequential(
