@@ -4,18 +4,8 @@ GPT post-processing: converts a stream of ASL word predictions into a natural se
 
 from openai import OpenAI
 
-client = OpenAI()  # reads OPENAI_API_KEY from environment
-
 
 def words_to_sentence(words: list[str]) -> str:
-    """Send a word list to GPT and return a natural sentence.
-
-    Args:
-        words: List of predicted ASL signs e.g. ["hello", "yes", "want", "help"]
-
-    Returns:
-        A grammatically correct sentence string.
-    """
     if not words:
         return ""
 
@@ -24,6 +14,7 @@ def words_to_sentence(words: list[str]) -> str:
         f"Only return the sentence, nothing else.\n\nSigns: {', '.join(words)}"
     )
 
+    client = OpenAI()  # reads OPENAI_API_KEY from environment
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],

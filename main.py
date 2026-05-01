@@ -51,8 +51,12 @@ def main() -> None:
 
     def update_sentence(words: list[str]) -> None:
         nonlocal current_sentence, llm_running
-        current_sentence = words_to_sentence(words)
-        llm_running = False
+        try:
+            current_sentence = words_to_sentence(words)
+        except Exception:
+            pass
+        finally:
+            llm_running = False
 
     with HolisticLandmarkExtractor() as extractor:
         for ok, frame in get_frames(camera_id=0, width=640, height=480):
