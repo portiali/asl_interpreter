@@ -1,5 +1,5 @@
 """
-Simple LSTM that takes sequences of MediaPipe landmark vectors.
+Transforemer architecture that takes sequences of MediaPipe landmark vectors.
 
 Supports both pose landmarks (132-d) and hand landmarks (126-d).
 """
@@ -17,42 +17,50 @@ CLASS_LABELS = {
 }
 
 
-class LandmarkLSTM(nn.Module):
+class LandmarkTransformer(nn.Module):
     """
-    LSTM over sequences of pose landmark vectors.
+    Transformer over sequences of pose landmark vectors.
     Input: (batch, seq_len, LANDMARK_VEC_SIZE)
     Output: (batch, num_classes) for classification, or (batch, seq_len, hidden) for sequence output.
     """
 
     def __init__(
         self,
+        num_classes: int,
         input_size: int = HOLISTIC_VEC_SIZE,
-        hidden_size: int = 128,
-        num_layers: int = 2,
-        num_classes: int = 5,
+        d_model: int = 256,  # We can change this if it underfits
+        nhead: int = 4,
+        dim_feedforward: int = 1024,
+        num_layers: int = 4,
         dropout: float = 0.2,
-        bidirectional: bool = False,
+        seq_len: int = 30,
     ):
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.bidirectional = bidirectional
-        self.num_directions = 2 if bidirectional else 1
+        self.d_model = d_model
+        self.seq_len = seq_len
 
-        self.lstm = nn.LSTM(
-            input_size=input_size,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
+        self.proj = nn.Linear(input_size, self.d_model)
+
+        self.pos_embed = nn.Embedding(seq_len, d_model)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
             batch_first=True,
-            dropout=dropout if num_layers > 1 else 0.0,
-            bidirectional=bidirectional,
+            norm_first=True,
         )
-        out_size = hidden_size * self.num_directions
+
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer=encoder_layer, num_layers=num_layers
+        )
+
         self.fc = nn.Sequential(
-            nn.Linear(out_size, out_size // 2),
+            nn.Linear(d_model, d_model // 2),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(out_size // 2, num_classes),
+            nn.Linear(d_model // 2, num_classes),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -60,10 +68,19 @@ class LandmarkLSTM(nn.Module):
         x: (batch, seq_len, input_size)
         returns: (batch, num_classes)
         """
-        out, _ = self.lstm(x)
-        # use last timestep
-        last = out[:, -1, :]
-        return self.fc(last)
+        # Convert HOLISTIC_VECTOR_SIZE -> d_model
+        x = self.proj(x)
+
+        positions = torch.arange(x.size(1), device=x.device)
+        x = x + self.pos_embed(positions)
+
+        # Self-attention encoder
+        x = self.transformer(x)
+
+        # Mean-pool across time (every frame has attended to every other)
+        x = x.mean(dim=1)
+
+        return self.fc(x)
 
 
 def build_dummy_sequence(batch: int = 2, seq_len: int = 30) -> torch.Tensor:
