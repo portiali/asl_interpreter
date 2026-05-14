@@ -3,11 +3,15 @@
 import pytest
 import torch
 
-from src.model import CLASS_LABELS, LandmarkTransformer, build_dummy_sequence
+from src.model import LandmarkTransformer
 from src.landmarks import HOLISTIC_VEC_SIZE
 
-NUM_CLASSES = len(CLASS_LABELS)
+NUM_CLASSES = 10
 SEQ_LEN = 30
+
+
+def build_dummy_sequence(batch: int, seq_len: int) -> torch.Tensor:
+    return torch.randn(batch, seq_len, HOLISTIC_VEC_SIZE)
 
 
 @pytest.fixture

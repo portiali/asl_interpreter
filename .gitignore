@@ -4,8 +4,10 @@ __pycache__/
 
 # Virtual env
 venv/
-.env/
 .venv/
+
+# Secrets
+.env
 
 # OS
 .DS_Store
@@ -13,9 +15,6 @@ venv/
 # Training data
 data/
 *.npy
-
-# ML artifacts
-models/
 
 # Logs
 logs/
