@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ASL Interpreter</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo-dot"></span>
+        <span class="brand-name">ASL Interpreter</span>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-translate">Translate Now</button>
+        <div class="status">
+          <span class="dot dot-idle" id="status-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="tiles">
+        <div class="tile tile-user">
+          <img id="video" src="{{ url_for('video_feed') }}" alt="Live camera feed" />
+          <div class="tile-name">You</div>
+
+          <div class="caption-bar" id="caption-bar">
+            <div class="caption-text" id="caption-text">Listening for signs…</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-section">
+          <div class="panel-title">Detected signs</div>
+          <div class="chip-row" id="chip-row">
+            <span class="chip-empty">No signs yet</span>
+          </div>
+        </div>
+
+        <div class="panel-section grow">
+          <div class="panel-title">Transcript</div>
+          <div class="transcript" id="transcript"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

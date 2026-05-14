@@ -1,5 +1,5 @@
 """
-MediaPipe landmark extraction. Produces flat vectors per frame for the LSTM.
+MediaPipe landmark extraction. Produces flat vectors per frame for the transformer.
 
 Includes Pose, Hand, and Holistic landmark extractors.
 """
@@ -213,11 +213,13 @@ class HolisticLandmarkExtractor:
         self,
         min_detection_confidence: float = 0.5,
         min_tracking_confidence: float = 0.5,
+        model_complexity: int = 0,
     ):
         self.mp_holistic = mp.solutions.holistic
         self.holistic = self.mp_holistic.Holistic(
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence,
+            model_complexity=model_complexity,
         )
         self.mp_draw = mp.solutions.drawing_utils
         self.mp_hands_module = mp.solutions.hands

@@ -1,1 +1,1 @@
-# Camera + MediaPipe + LSTM pipeline
+# Camera + MediaPipe + Transformer pipeline

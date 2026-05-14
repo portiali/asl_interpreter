@@ -180,7 +180,7 @@ def main() -> None:
         "--patience", type=int, default=10, help="Early stopping patience"
     )
     parser.add_argument(
-        "--checkpoint_dir", type=str, default="checkpoints", help="Where to save model"
+        "--checkpoint_dir", type=str, default="models", help="Where to save model"
     )
     args = parser.parse_args()
 

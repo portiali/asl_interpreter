@@ -8,7 +8,7 @@ from huggingface_hub import hf_hub_download, snapshot_download, HfApi
 from src.landmarks import HolisticLandmarkExtractor, HOLISTIC_VEC_SIZE
 
 REPO_ID = "ZahidYasinMittha/American-Sign-Language-Dataset"
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data"
 TMP_DIR = DATA_DIR / "_tmp"
 
 repo_root = snapshot_download(
