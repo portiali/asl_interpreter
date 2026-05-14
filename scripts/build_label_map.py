@@ -42,8 +42,10 @@ def main() -> None:
         json.dump(label_map, f, indent=2)
 
     print(f"Wrote {len(label_map)} labels to {args.out}")
-    print(f"Sample: index 0 = {words[0]!r}, index 308 = {words[308]!r}, "
-          f"index {len(words)-1} = {words[-1]!r}")
+    print(
+        f"Sample: index 0 = {words[0]!r}, index 308 = {words[308]!r}, "
+        f"index {len(words) - 1} = {words[-1]!r}"
+    )
 
 
 if __name__ == "__main__":

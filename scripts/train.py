@@ -88,7 +88,8 @@ class SignLanguageDataset(Dataset):
 def discover_labels(data_dir: str) -> dict[str, int]:
     """Build a label_map from subdirectories of data_dir, sorted alphabetically."""
     words = sorted(
-        d for d in os.listdir(data_dir)
+        d
+        for d in os.listdir(data_dir)
         if os.path.isdir(os.path.join(data_dir, d)) and not d.startswith("_")
     )
     return {word: idx for idx, word in enumerate(words)}

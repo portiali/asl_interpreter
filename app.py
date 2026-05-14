@@ -35,7 +35,7 @@ from src.model import load_label_map, load_model
 load_dotenv()
 
 # --- Configuration ---
-SILENCE_SECONDS = 3.5         # how long the buffer must sit idle before translating
+SILENCE_SECONDS = 3.5  # how long the buffer must sit idle before translating
 MIN_SIGNS_TO_TRANSLATE = 1
 JPEG_QUALITY = 65
 CAMERA_W, CAMERA_H = 640, 480
@@ -44,13 +44,17 @@ OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 # --- Transformer inference config ---
 TFM_CHECKPOINT = os.environ.get("TFM_CHECKPOINT", "models/best_model_transformer.pt")
 TFM_LABEL_MAP_PATHS = ["models/label_map.json", "label_map.json", "data/label_map.json"]
-TFM_CONF_THRESHOLD = 0.10    # min softmax prob to count as a vote (1740-class model is diffuse)
-TFM_INFER_EVERY = 6          # run inference every N frames (~5 Hz at 30 fps)
-TFM_CONSISTENT_VOTES = 2     # need this many consecutive same predictions to emit
-TFM_COOLDOWN_SEC = 2.0       # don't repeat the SAME sign within this window
-TFM_GLOBAL_COOLDOWN = 0.6    # min gap between any two emissions
-TFM_MIN_HAND_FRAMES = 20     # need at least this many frames with hands in the 120-frame buffer
-TFM_DEBUG = False            # print top prediction every inference
+TFM_CONF_THRESHOLD = (
+    0.10  # min softmax prob to count as a vote (1740-class model is diffuse)
+)
+TFM_INFER_EVERY = 6  # run inference every N frames (~5 Hz at 30 fps)
+TFM_CONSISTENT_VOTES = 2  # need this many consecutive same predictions to emit
+TFM_COOLDOWN_SEC = 2.0  # don't repeat the SAME sign within this window
+TFM_GLOBAL_COOLDOWN = 0.6  # min gap between any two emissions
+TFM_MIN_HAND_FRAMES = (
+    20  # need at least this many frames with hands in the 120-frame buffer
+)
+TFM_DEBUG = False  # print top prediction every inference
 
 app = Flask(__name__)
 
@@ -68,8 +72,8 @@ class AppState:
 
 state = AppState()
 openai_client: Optional[OpenAI] = None
-tfm_model = None                 # LandmarkTransformer (eval mode, on CPU/GPU)
-tfm_seq_len: int = 120           # filled in at load time
+tfm_model = None  # LandmarkTransformer (eval mode, on CPU/GPU)
+tfm_seq_len: int = 120  # filled in at load time
 tfm_labels: dict[int, str] = {}  # idx -> word, from label_map.json
 tfm_device: Optional[torch.device] = None
 
@@ -99,7 +103,8 @@ def _capture_loop() -> None:
         "[capture] starting MediaPipe overlay"
         + (
             f" + Transformer ({len(tfm_labels)} classes, seq_len={tfm_seq_len})"
-            if has_tfm else " (no inference)"
+            if has_tfm
+            else " (no inference)"
         )
     )
     prev_time = time.time()
@@ -124,8 +129,7 @@ def _capture_loop() -> None:
             if has_tfm:
                 has_hand = vec is not None
                 frame_buf.append(
-                    vec if has_hand
-                    else np.zeros(HOLISTIC_VEC_SIZE, dtype=np.float32)
+                    vec if has_hand else np.zeros(HOLISTIC_VEC_SIZE, dtype=np.float32)
                 )
                 hand_flags.append(has_hand)
                 if len(frame_buf) > tfm_seq_len:
@@ -142,7 +146,9 @@ def _capture_loop() -> None:
                     word, conf = _tfm_predict(frame_buf)
                     now = time.time()
                     if TFM_DEBUG and word is not None:
-                        print(f"[tfm] top={word!r} conf={conf:.3f} hands={sum(hand_flags)}/{tfm_seq_len}")
+                        print(
+                            f"[tfm] top={word!r} conf={conf:.3f} hands={sum(hand_flags)}/{tfm_seq_len}"
+                        )
 
                     # Vote-based smoothing: same class N times in a row,
                     # each above threshold, before we emit.
@@ -160,15 +166,20 @@ def _capture_loop() -> None:
                         consec_word is not None
                         and consec_count >= TFM_CONSISTENT_VOTES
                         and (now - last_global_emit) >= TFM_GLOBAL_COOLDOWN
-                        and (now - last_emit_per_word.get(consec_word, 0.0)) >= TFM_COOLDOWN_SEC
+                        and (now - last_emit_per_word.get(consec_word, 0.0))
+                        >= TFM_COOLDOWN_SEC
                     ):
                         _emit_sign(consec_word)
                         last_emit_per_word[consec_word] = now
                         last_global_emit = now
                         cv2.putText(
-                            drawn, f"{consec_word} {conf:.2f}",
-                            (10, 28), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.7, (0, 255, 0), 2,
+                            drawn,
+                            f"{consec_word} {conf:.2f}",
+                            (10, 28),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.7,
+                            (0, 255, 0),
+                            2,
                         )
                         # After emitting, drain the buffer so the next sign
                         # starts from a clean window.
@@ -212,8 +223,13 @@ def _draw_fps(frame, fps: float):
     h, w = frame.shape[:2]
     (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
     cv2.putText(
-        frame, text, (w - tw - 12, h - 12),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1,
+        frame,
+        text,
+        (w - tw - 12, h - 12),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (200, 200, 200),
+        1,
     )
     return frame
 
@@ -370,7 +386,9 @@ if __name__ == "__main__":
                 f"{num_classes} classes, seq_len={seq_len}, labels={label_src}"
             )
         except Exception as e:
-            print(f"[app] failed to load transformer checkpoint ({TFM_CHECKPOINT}): {e}")
+            print(
+                f"[app] failed to load transformer checkpoint ({TFM_CHECKPOINT}): {e}"
+            )
     else:
         print(
             f"[app] no transformer checkpoint at {TFM_CHECKPOINT} —"
